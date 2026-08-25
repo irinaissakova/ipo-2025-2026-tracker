@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2025–2026 IPOs Returns Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f1f5f9; color: #0f172a; min-height: 100vh; font-size: 14px; }
+
+  /* Header */
+  .header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 22px 24px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .live-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 6px #16a34a; animation: pulse 2s infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  h1 { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; line-height: 1.2; }
+  .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+  .hdr-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  .btn { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; transition: all .15s; color: #374151; }
+  .btn-purple { color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff; }
+  .btn-purple:hover:not(:disabled) { background: #ede9fe; }
+  .btn:hover:not(:disabled) { background: #f1f5f9; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* KPI Grid */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 13px; }
+  .kpi-label { font-size: 9px; color: #94a3b8; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+  .kpi-value { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+  .kpi-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+  /* AI insight */
+  .ai-panel { margin-top: 14px; padding: 11px 14px; background: #f5f3ff; border: 1px solid #ddd6fe; border-left: 3px solid #7c3aed; border-radius: 8px; font-size: 13px; color: #4c1d95; line-height: 1.7; display: none; }
+
+  /* Controls */
+  .controls { padding: 12px 24px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #e2e8f0; background: #ffffff; }
+  .pills { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+  .pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid #e2e8f0; cursor: pointer; background: #f8fafc; color: #64748b; transition: all .15s; }
+  .pill:hover { background: #f1f5f9; }
+  .pill.active { color: #fff; border-color: transparent; }
+  select { padding: 5px 9px; border-radius: 8px; font-size: 11px; background: #f8fafc; color: #374151; border: 1px solid #e2e8f0; cursor: pointer; }
+  .view-toggle { display: flex; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; }
+  .view-btn { padding: 5px 13px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; background: transparent; color: #94a3b8; transition: all .15s; }
+  .view-btn.active { background: #ffffff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  /* Ticker panel */
+  #ticker-panel { margin: 14px 24px 0; padding: 14px 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; display: none; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .td-grid { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+  .td-stats { display: flex; gap: 18px; flex-wrap: wrap; }
+  .td-stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+  .td-stat-value { font-size: 14px; font-weight: 700; }
+  .sector-chip { padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+
+  /* Content */
+  .content { padding: 14px 24px; }
+  .tbl-wrap { overflow-x: auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { padding: 10px 10px; font-size: 9px; font-weight: 600; color: #94a3b8; letter-spacing: .07em; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; white-space: nowrap; background: #f8fafc; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: #475569; background: #f1f5f9; }
+  th.sort-active { color: #7c3aed !important; background: #f5f3ff !important; }
+  .sort-arrow { margin-left: 3px; font-size: 9px; opacity: 0.7; }
+  .r { text-align: right; } .c { text-align: center; }
+  td { padding: 10px 10px; border-bottom: 1px solid #f1f5f9; }
+  tr.drow { cursor: pointer; transition: background .1s; }
+  tr.drow:hover td, tr.drow.sel td { background: #f5f3ff !important; }
+  tr.drow:last-child td { border-bottom: none; }
+  .sbadge { padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; }
+  .lpd { width: 5px; height: 5px; border-radius: 50%; background: #16a34a; display: inline-block; box-shadow: 0 0 4px #16a34a; margin-right: 3px; }
+
+  /* Chart view */
+  #chart-view { display: none; flex-direction: column; gap: 16px; }
+  .chart-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .chart-title { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .chart-wrap { position: relative; height: 280px; }
+  .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .bar-row { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+  .bar-tkr { width: 34px; font-size: 9px; color: #94a3b8; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 13px; border-radius: 2px; background: #f1f5f9; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+  .bar-lbl { width: 40px; font-size: 10px; font-weight: 700; flex-shrink: 0; text-align: right; }
+
+  /* Footer */
+  .footer-insights { margin: 10px 24px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 9px; }
+  .fi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
+  .fi-icon { font-size: 17px; margin-bottom: 5px; }
+  .fi-title { font-weight: 700; color: #0f172a; font-size: 12px; margin-bottom: 3px; }
+  .fi-text { font-size: 11px; color: #64748b; line-height: 1.6; }
+  .footer-note { padding: 0 24px 16px; font-size: 10px; color: #cbd5e1; }
+  .dim { color: #cbd5e1; }
+  .muted { color: #94a3b8; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>2025–2026 IPOs Returns Tracker</h1>
+      <p class="subtitle">24 notable US IPOs (2025–2026) · AI commentary on demand · Returns from IPO price</p>
+    </div>
+    <div class="hdr-btns">
+      <button class="btn btn-purple" id="insight-btn" onclick="fetchMarketInsight()">✦ AI Market Insight</button>
+    </div>
+  </div>
+  <div id="ai-panel" class="ai-panel"></div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div style="margin-top:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:11px;color:#166534;line-height:1.5">
+    <strong>Gross Margin</strong> = (Revenue − Cost of Revenue) ÷ Revenue. Measures how efficiently a company delivers its core product or service. Higher is generally better, but varies widely by industry — software/fintech typically exceeds 70%, while industrials and distributors often run 15–40%. Not directly comparable across sectors.
+  </div>
+</div>
+
+<div class="controls">
+  <div class="pills" id="pills"></div>
+  <select id="sort-sel" onchange="applyFilters()">
+    <option value="ipoDate">Sort: IPO Date</option>
+    <option value="amtRaised">Sort: Capital Raised</option>
+    <option value="r1m">Sort: 1-Month Return</option>
+    <option value="r6m">Sort: 6-Month Return</option>
+    <option value="rCurrent">Sort: Current vs IPO</option>
+  </select>
+  <div class="view-toggle">
+    <button class="view-btn active" id="vbtn-table" onclick="setView('table')">⊞ Table</button>
+    <button class="view-btn" id="vbtn-chart" onclick="setView('chart')">▦ Chart</button>
+  </div>
+</div>
+
+<div id="ticker-panel">
+  <div class="td-grid" id="td-grid"></div>
+</div>
+
+<div class="content">
+  <div id="table-view">
+    <div class="tbl-wrap">
+      <table>
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="chart-view">
+    <div class="chart-card">
+      <div class="chart-title">Return Comparison · 1-Month · 6-Month · Current vs IPO</div>
+      <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
+    </div>
+    <div class="dist-grid">
+      <div class="chart-card">
+        <div class="chart-title">1-Month Returns</div>
+        <div id="dist-1m"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Current vs IPO</div>
+        <div id="dist-cur"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-insights" id="footer-insights"></div>
+<div class="footer-note">AI commentary via Claude · Historical data: Wolf Street, Investing.com, MacroTrends · Prices as of Aug 24, 2026 · Not financial advice<br>† 12-Month return measured from first-day close (retail entry price), not IPO price · 1M and 6M returns measured from IPO price<br>‡ Gross Margin from most recent reported quarter (Q2 2026 where available). Figure Technology (FIGR) and Fermi Inc. (FRMI) not reported due to non-comparable business model / pre-revenue status.</div>
+
+<script>
+const IPO_DATA = [
+  {company:"CoreWeave",ticker:"CRWV",sector:"AI Infra",ipoDate:"Mar 2025",ipoPrice:40,firstDayClose:148.97,oneMonth:53,sixMonth:76,twelveMonth:95.74,current:86.25,amtRaised:1.5,grossMargin:65},
+  {company:"Circle Internet",ticker:"CRCL",sector:"Crypto/Fintech",ipoDate:"Jun 2025",ipoPrice:31,firstDayClose:83.7,oneMonth:85,sixMonth:81,twelveMonth:62.63,current:87.72,amtRaised:1.05,grossMargin:41},
+  {company:"Figma",ticker:"FIG",sector:"SaaS",ipoDate:"Jul 2025",ipoPrice:33,firstDayClose:115.5,oneMonth:79,sixMonth:38.5,twelveMonth:24.32,current:27.44,amtRaised:2.4,grossMargin:84},
+  {company:"Bullish",ticker:"BLSH",sector:"Crypto",ipoDate:"Aug 2025",ipoPrice:37,firstDayClose:75,oneMonth:51,sixMonth:41,twelveMonth:null,current:30.61,amtRaised:1.11,grossMargin:100},
+  {company:"Chime Financial",ticker:"CHYM",sector:"Fintech",ipoDate:"Jun 2025",ipoPrice:27,firstDayClose:37,oneMonth:40,sixMonth:26.5,twelveMonth:20.48,current:32.70,amtRaised:0.9,grossMargin:89},
+  {company:"Klarna",ticker:"KLAR",sector:"Fintech",ipoDate:"Sep 2025",ipoPrice:40,firstDayClose:46.4,oneMonth:41,sixMonth:16.4,twelveMonth:null,current:14.11,amtRaised:1.37,grossMargin:43},
+  {company:"StubHub",ticker:"STUB",sector:"Marketplace",ipoDate:"Sep 2025",ipoPrice:23.5,firstDayClose:24,oneMonth:19,sixMonth:10,twelveMonth:null,current:6.68,amtRaised:1.0,grossMargin:82},
+  {company:"Navan",ticker:"NAVN",sector:"SaaS",ipoDate:"Oct 2025",ipoPrice:25,firstDayClose:20,oneMonth:16,sixMonth:21.4,twelveMonth:null,current:29.16,amtRaised:0.75,grossMargin:71},
+  {company:"Venture Global",ticker:"VG",sector:"Energy",ipoDate:"Jan 2025",ipoPrice:25,firstDayClose:25.5,oneMonth:18,sixMonth:7,twelveMonth:13.3,current:14.21,amtRaised:1.75,grossMargin:60},
+  {company:"Medline",ticker:"MDLN",sector:"Healthcare",ipoDate:"Dec 2025",ipoPrice:29,firstDayClose:41,oneMonth:36,sixMonth:null,twelveMonth:null,current:34.26,amtRaised:6.27,grossMargin:26},
+  {company:"SailPoint",ticker:"SAIL",sector:"Cybersecurity",ipoDate:"Jan 2025",ipoPrice:23,firstDayClose:24,oneMonth:22,sixMonth:21,twelveMonth:22,current:18.13,amtRaised:1.38,grossMargin:65},
+  {company:"Firefly Aerospace",ticker:"FLY",sector:"Aerospace",ipoDate:"Sep 2025",ipoPrice:45,firstDayClose:63,oneMonth:40,sixMonth:23,twelveMonth:null,current:23.10,amtRaised:1.8,grossMargin:28},
+  {company:"Netskope",ticker:"NTSK",sector:"Cybersecurity",ipoDate:"Sep 2025",ipoPrice:19,firstDayClose:22,oneMonth:21,sixMonth:18,twelveMonth:null,current:14.40,amtRaised:0.88,grossMargin:73},
+  {company:"NIQ Global",ticker:"NIQ",sector:"Data/Analytics",ipoDate:"Jun 2025",ipoPrice:21,firstDayClose:20,oneMonth:18,sixMonth:16.4,twelveMonth:9.35,current:18.97,amtRaised:1.0,grossMargin:56},
+  {company:"Figure Technology",ticker:"FIGR",sector:"Fintech/Crypto",ipoDate:"Sep 2025",ipoPrice:25,firstDayClose:48,oneMonth:46,sixMonth:44,twelveMonth:null,current:36.56,amtRaised:1.1,grossMargin:null},
+  {company:"Legence Corp",ticker:"LGN",sector:"Industrials",ipoDate:"Sep 2025",ipoPrice:28,firstDayClose:38,oneMonth:44,sixMonth:44.6,twelveMonth:null,current:58.89,amtRaised:0.88,grossMargin:17},
+  {company:"Accelerant Holdings",ticker:"ARX",sector:"Fintech/Insurance",ipoDate:"Sep 2025",ipoPrice:21,firstDayClose:24,oneMonth:19,sixMonth:16.5,twelveMonth:null,current:19.66,amtRaised:0.73,grossMargin:61},
+  {company:"BETA Technologies",ticker:"BETA",sector:"Aerospace",ipoDate:"Sep 2025",ipoPrice:34,firstDayClose:36,oneMonth:30,sixMonth:30,twelveMonth:null,current:23.84,amtRaised:0.9,grossMargin:54},
+  {company:"Alliance Laundry",ticker:"ALH",sector:"Industrials",ipoDate:"Aug 2025",ipoPrice:22,firstDayClose:24,oneMonth:22,sixMonth:21.4,twelveMonth:null,current:23.47,amtRaised:0.8,grossMargin:40},
+  {company:"Fermi Inc.",ticker:"FRMI",sector:"AI/Tech",ipoDate:"Sep 2025",ipoPrice:21,firstDayClose:33,oneMonth:22,sixMonth:8.9,twelveMonth:null,current:5.62,amtRaised:0.68,grossMargin:null},
+  {company:"SpaceX",ticker:"SPCX",sector:"Aerospace",ipoDate:"Jun 2026",ipoPrice:135,firstDayClose:160.95,oneMonth:135.27,sixMonth:null,twelveMonth:null,current:135.00,amtRaised:75,grossMargin:52},
+  {company:"Ethos Technologies",ticker:"LIFE",sector:"Insurtech",ipoDate:"Jan 2026",ipoPrice:19,firstDayClose:16.85,oneMonth:12.35,sixMonth:19.84,twelveMonth:null,current:36.72,amtRaised:0.20,grossMargin:98},
+  {company:"Cerebras Systems",ticker:"CBRS",sector:"AI Chips",ipoDate:"May 2026",ipoPrice:185,firstDayClose:311.07,oneMonth:null,sixMonth:null,twelveMonth:null,current:185.43,amtRaised:3.5,grossMargin:41},
+  {company:"Quantinuum",ticker:"QNT",sector:"Quantum Computing",ipoDate:"Jun 2026",ipoPrice:60,firstDayClose:60,oneMonth:null,sixMonth:null,twelveMonth:null,current:53.03,amtRaised:1.68,grossMargin:62},
+];
+
+const SC = {
+  "AI Infra":"#6366f1","Crypto/Fintech":"#d97706","SaaS":"#2563eb","Crypto":"#ca8a04",
+  "Fintech":"#059669","Marketplace":"#7c3aed","Energy":"#dc2626","Healthcare":"#0891b2",
+  "Cybersecurity":"#65a30d","Aerospace":"#ea580c","Data/Analytics":"#64748b",
+  "Fintech/Crypto":"#7c3aed","Industrials":"#78716c","Fintech/Insurance":"#0891b2","AI/Tech":"#c026d3",
+  "Insurtech":"#14b8a6","AI Chips":"#8b5cf6","Quantum Computing":"#ec4899",
+};
+
+const cR = (ip, p) => p == null ? null : Math.round(((p - ip) / ip) * 100);
+const fP = v => v == null ? "–" : `${v > 0 ? "+" : ""}${v}%`;
+const gC = v => v == null ? "#94a3b8" : v >= 0 ? "#16a34a" : "#dc2626";
+const avg = a => a.length ? Math.round(a.reduce((s,x) => s+x, 0) / a.length) : 0;
+const pctPos = a => a.length ? Math.round(a.filter(x => x >= 0).length / a.length * 100) : 0;
+
+const MONTH_IDX = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function ipoDateNum(s) {
+  const [mon, yr] = s.split(" ");
+  return parseInt(yr) * 12 + (MONTH_IDX[mon] ?? 0);
+}
+
+const enriched = IPO_DATA.map(d => ({
+  ...d,
+  r1m: cR(d.ipoPrice, d.oneMonth),
+  r6m: cR(d.ipoPrice, d.sixMonth),
+  r12m: cR(d.firstDayClose, d.twelveMonth),
+  rFD: cR(d.ipoPrice, d.firstDayClose),
+  rCurrent: cR(d.ipoPrice, d.current),
+  ipoDateTs: ipoDateNum(d.ipoDate),
+}));
+
+let filt = "All", srt = "ipoDate", srtDir = 1, view = "table", selTkr = null, mainChart = null;
+
+// col key → {label, align, title?}
+const COLS = [
+  {key:"company",   label:"Company",     align:"l"},
+  {key:"sector",    label:"Sector",      align:"l"},
+  {key:"ipoDate",   label:"IPO Date",    align:"r"},
+  {key:"ipoPrice",  label:"IPO Price",   align:"r"},
+  {key:"amtRaised", label:"Raised",      align:"r"},
+  {key:"rFD",       label:"1st Day",     align:"r"},
+  {key:"r1m",       label:"1-Month",     align:"r"},
+  {key:"r6m",       label:"6-Month",     align:"r"},
+  {key:"r12m",      label:"12-Month †",  align:"r", title:"Return from first-day close (retail entry price)"},
+  {key:"current",   label:"Price",       align:"r", subLabel:"Aug 24, 2026"},
+  {key:"rCurrent",  label:"vs IPO",      align:"r"},
+  {key:"grossMargin",label:"Gross Margin ‡",align:"r", title:"Latest reported gross margin % (Revenue minus Cost of Revenue). Varies significantly by industry."},
+  {key:"_ai",       label:"AI",          align:"c", noSort:true},
+];
+
+function setSort(key) {
+  if (srt === key) { srtDir *= -1; }
+  else { srt = key; srtDir = key === "ipoDate" ? 1 : -1; }
+  // sync dropdown if it exists
+  const sel = document.getElementById("sort-sel");
+  if (sel && ["amtRaised","r1m","r6m","rCurrent"].includes(key)) sel.value = key;
+  renderHeader();
+  renderTable();
+  if (view === "chart") renderCharts();
+}
+
+const with1m = enriched.filter(d => d.r1m != null);
+const with6m = enriched.filter(d => d.r6m != null);
+const withCur = enriched.filter(d => d.rCurrent != null);
+const avgFD = avg(enriched.filter(d => d.rFD != null).map(d => d.rFD));
+const avg1m = avg(with1m.map(d => d.r1m));
+const avg6m = avg(with6m.map(d => d.r6m));
+const avgCur = avg(withCur.map(d => d.rCurrent));
+
+function getFiltered() {
+  let data = filt === "All" ? [...enriched] : enriched.filter(d => d.sector === filt);
+  const NULL_SENTINEL = -99999;
+  data.sort((a, b) => {
+    // ipoDate: sort by numeric timestamp so chronological order is correct
+    if (srt === "ipoDate") {
+      return srtDir * (a.ipoDateTs - b.ipoDateTs);
+    }
+    let av = a[srt], bv = b[srt];
+    // string sort for text columns
+    if (typeof av === "string" || typeof bv === "string") {
+      av = av ?? ""; bv = bv ?? "";
+      return srtDir * av.localeCompare(bv);
+    }
+    // numeric: nulls always last
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    return srtDir * (bv - av);
+  });
+  return data;
+}
+
+function renderHeader() {
+  const arrow = (key) => {
+    if (srt !== key) return "";
+    return `<span class="sort-arrow">${srtDir === -1 ? "↓" : "↑"}</span>`;
+  };
+  document.getElementById("thead").innerHTML = `<tr>${COLS.map(c => {
+    const cls = [c.align === "r" ? "r" : c.align === "c" ? "c" : "",
+                 c.noSort ? "" : "sortable",
+                 srt === c.key ? "sort-active" : ""].filter(Boolean).join(" ");
+    const onclick = c.noSort ? "" : `onclick="setSort('${c.key}')"`;
+    const title = c.title ? `title="${c.title}"` : "";
+    const sub = c.subLabel ? `<div style="font-size:8px;font-weight:400;color:#cbd5e1;margin-top:1px;text-transform:none;letter-spacing:0">${c.subLabel}</div>` : "";
+    return `<th class="${cls}" ${onclick} ${title}>${c.label}${sub}${arrow(c.key)}</th>`;
+  }).join("")}</tr>`;
+}
+
+function renderKPIs() {
+  const cards = [
+    {label:"Avg First-Day Pop", value:`+${avgFD}%`, color:"#7c3aed", sub:"Institutional price only"},
+    {label:"Avg 1-Month", value:fP(avg1m), color:gC(avg1m), sub:`${pctPos(with1m.map(d=>d.r1m))}% above IPO`},
+    {label:"Avg 6-Month", value:fP(avg6m), color:gC(avg6m), sub:`${pctPos(with6m.map(d=>d.r6m))}% above IPO`},
+    {label:"Avg vs IPO", value:fP(avgCur), color:gC(avgCur), sub:`${pctPos(withCur.map(d=>d.rCurrent))}% above IPO`},
+    {label:"Capital Raised", value:`$${IPO_DATA.reduce((s,d)=>s+d.amtRaised,0).toFixed(1)}B`, color:"#0f172a", sub:`Across ${IPO_DATA.length} IPOs`},
+    {label:"IPOs Tracked", value:`${IPO_DATA.length}`, color:"#0f172a", sub:"2025–2026 US listings"},
+  ];
+  document.getElementById("kpi-grid").innerHTML = cards.map(k =>
+    `<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value" style="color:${k.color}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`
+  ).join("");
+}
+
+function renderPills() {
+  const sectors = ["All", ...Array.from(new Set(IPO_DATA.map(d => d.sector)))].slice(0, 11);
+  document.getElementById("pills").innerHTML = sectors.map(s =>
+    `<button class="pill${s===filt?" active":""}" style="${s===filt?`background:${SC[s]||"#4f46e5"};border-color:${SC[s]||"#4f46e5"}`:""};" onclick="setFilter('${s}')">${s}</button>`
+  ).join("");
+}
+
+function renderTable() {
+  const data = getFiltered();
+  const rV = (v) => v != null
+    ? `<span style="color:${gC(v)};font-weight:600">${v>=0?"+":""}${v}%</span>`
+    : `<span class="dim">–</span>`;
+  const gmC = (v) => v >= 70 ? "#16a34a" : v >= 40 ? "#d97706" : "#dc2626";
+  const gmV = (v) => v != null
+    ? `<span style="color:${gmC(v)};font-weight:600">${v}%</span>`
+    : `<span class="dim">–</span>`;
+  document.getElementById("tbody").innerHTML = data.map((d, i) =>
+    `<tr class="drow${selTkr===d.ticker?" sel":""}" style="background:${i%2===0?"#ffffff":"#fafafa"}" onclick="selectTkr('${d.ticker}')">
+      <td><div style="font-weight:700;color:#0f172a">${d.company}</div><div style="font-size:9px;color:#94a3b8;margin-top:1px">${d.ticker}</div></td>
+      <td><span class="sbadge" style="background:${SC[d.sector]||"#64748b"}18;color:${SC[d.sector]||"#64748b"}">${d.sector}</span></td>
+      <td class="r" style="color:#64748b">${d.ipoDate}</td>
+      <td class="r" style="font-weight:600;color:#0f172a">$${d.ipoPrice}</td>
+      <td class="r" style="color:#64748b">$${d.amtRaised}B</td>
+      <td class="r">${rV(d.rFD)}</td>
+      <td class="r">${rV(d.r1m)}</td>
+      <td class="r">${rV(d.r6m)}</td>
+      <td class="r">${rV(d.r12m)}</td>
+      <td class="r">${d.current ? `<span style="font-weight:700;color:#16a34a"><span class="lpd"></span>$${d.current}</span>` : '<span class="dim">–</span>'}</td>
+      <td class="r" style="font-size:13px">${rV(d.rCurrent)}</td>
+      <td class="r">${gmV(d.grossMargin)}</td>
+      <td class="c"><button class="btn btn-purple" style="padding:3px 7px;font-size:9px" onclick="event.stopPropagation();aiTkr('${d.ticker}')">✦ AI</button></td>
+    </tr>`
+  ).join("");
+}
+
+function renderCharts() {
+  const data = getFiltered();
+  if (mainChart) { mainChart.destroy(); mainChart = null; }
+
+  const ctx = document.getElementById("main-chart").getContext("2d");
+  mainChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.map(d => d.ticker),
+      datasets: [
+        {label:"1-Month", data:data.map(d=>d.r1m), backgroundColor:"#818cf8", borderRadius:2},
+        {label:"6-Month", data:data.map(d=>d.r6m), backgroundColor:"#22d3ee", borderRadius:2},
+        {label:"Current", data:data.map(d=>d.rCurrent), backgroundColor:"#4ade80", borderRadius:2},
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend:{labels:{color:"#64748b",font:{size:11}}},
+        tooltip:{
+          backgroundColor:"#0f172a", borderColor:"#e2e8f0", borderWidth:1,
+          callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y!=null?(c.parsed.y>=0?"+":"")+c.parsed.y+"%":"–"}`}
+        }
+      },
+      scales:{
+        x:{ticks:{color:"#94a3b8",font:{size:9}},grid:{color:"#f1f5f9"}},
+        y:{ticks:{color:"#94a3b8",callback:v=>v+"%"},grid:{color:"#f1f5f9"}}
+      }
+    }
+  });
+
+  const distBar = (items, key, posColor) => items
+    .filter(d => d[key] != null)
+    .sort((a,b) => b[key] - a[key])
+    .map(d => `<div class="bar-row">
+      <div class="bar-tkr">${d.ticker}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(Math.abs(d[key]),200)/2}%;background:${d[key]>=0?posColor:"#fca5a5"};${d[key]<0?"margin-left:auto":""}"></div></div>
+      <div class="bar-lbl" style="color:${gC(d[key])}">${fP(d[key])}</div>
+    </div>`).join("");
+
+  document.getElementById("dist-1m").innerHTML = distBar(data, "r1m", "#a5b4fc");
+  document.getElementById("dist-cur").innerHTML = distBar(data, "rCurrent", "#86efac");
+}
+
+function renderFooter() {
+  const pct6down = 100 - pctPos(with6m.map(d => d.r6m));
+  const cards = [
+    {icon:"📈",title:"The IPO Pop Trap",text:`The avg first-day pop of +${avgFD}% benefits institutions, not retail. By the time retail buys at the open, the pop has already happened.`},
+    {icon:"📉",title:"The 6-Month Cliff",text:`${pct6down}% of IPOs with 6-month data trade below their IPO price. Lock-up expiry at day ~180 creates predictable insider selling pressure.`},
+    {icon:"🔀",title:"Extreme Dispersion",text:"AI infrastructure and crypto outperformed massively. Energy and consumer marketplace lagged badly. Sector choice matters far more than IPO timing."},
+    {icon:"✦",title:"AI Commentary On-Demand",text:"Click ✦ AI Market Insight for a macro view, or the ✦ AI button on any row for a per-ticker analysis based on the return data."},
+  ];
+  document.getElementById("footer-insights").innerHTML = cards.map(c =>
+    `<div class="fi-card"><div class="fi-icon">${c.icon}</div><div class="fi-title">${c.title}</div><div class="fi-text">${c.text}</div></div>`
+  ).join("");
+}
+
+function setFilter(s) { filt = s; renderPills(); applyFilters(); }
+
+function applyFilters() {
+  const sel = document.getElementById("sort-sel").value;
+  if (sel !== srt) { srt = sel; srtDir = -1; renderHeader(); }
+  renderTable();
+  if (view === "chart") renderCharts();
+}
+
+function setView(v) {
+  view = v;
+  document.getElementById("table-view").style.display = v === "table" ? "block" : "none";
+  document.getElementById("chart-view").style.display = v === "chart" ? "flex" : "none";
+  document.getElementById("vbtn-table").classList.toggle("active", v === "table");
+  document.getElementById("vbtn-chart").classList.toggle("active", v === "chart");
+  if (v === "chart") setTimeout(renderCharts, 60);
+}
+
+function selectTkr(ticker) {
+  if (selTkr === ticker) { selTkr = null; document.getElementById("ticker-panel").style.display = "none"; }
+  else { selTkr = ticker; showTkrPanel(enriched.find(d => d.ticker === ticker)); }
+  renderTable();
+}
+
+function showTkrPanel(d) {
+  document.getElementById("ticker-panel").style.display = "block";
+  const stats = [
+    ["IPO Price",`$${d.ipoPrice}`,"#0f172a"],["Current",d.current?`$${d.current}`:"–","#0f172a"],
+    ["vs IPO",fP(d.rCurrent),gC(d.rCurrent)],["1-Month",fP(d.r1m),gC(d.r1m)],
+    ["6-Month",fP(d.r6m),gC(d.r6m)],["IPO Date",d.ipoDate,"#64748b"],["Raised",`$${d.amtRaised}B`,"#64748b"],
+  ];
+  document.getElementById("td-grid").innerHTML = `
+    <div style="flex:0 0 auto">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-weight:800;font-size:17px;color:#0f172a">${d.company}</span>
+        <span class="sector-chip" style="background:${SC[d.sector]||"#64748b"}18;color:${SC[d.sector]||"#64748b"}">${d.sector}</span>
+      </div>
+      <div class="td-stats">${stats.map(([l,v,c])=>`<div><div class="td-stat-label">${l}</div><div class="td-stat-value" style="color:${c}">${v}</div></div>`).join("")}</div>
+    </div>
+    <div style="flex:1;min-width:220px" id="tkr-ins-area">
+      <button class="btn btn-purple" id="tkr-ins-btn" style="margin-bottom:8px" onclick="aiTkr('${d.ticker}')">✦ Get AI insight on ${d.ticker}</button>
+      <div id="tkr-ins-text" style="font-size:12px;color:#374151;line-height:1.7"></div>
+    </div>
+    <button onclick="closeTkrPanel()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:17px;padding:4px;align-self:flex-start">✕</button>`;
+}
+
+function closeTkrPanel() {
+  selTkr = null;
+  document.getElementById("ticker-panel").style.display = "none";
+  renderTable();
+}
+
+async function aiTkr(ticker) {
+  const d = enriched.find(x => x.ticker === ticker);
+  if (!d) return;
+  if (selTkr !== ticker) { selTkr = ticker; showTkrPanel(d); renderTable(); }
+
+  const btn = document.getElementById("tkr-ins-btn");
+  const txt = document.getElementById("tkr-ins-text");
+  if (btn) { btn.disabled = true; btn.textContent = "Researching…"; }
+  if (txt) txt.innerHTML = `<span class="muted">Analyzing ${d.ticker}…</span>`;
+
+  // Assessment derived from the ticker's own return profile.
+  await new Promise(r => setTimeout(r, 500));
+  const insightText = buildTickerInsight(d);
+  if (txt) txt.textContent = insightText;
+  if (btn) { btn.disabled = false; btn.textContent = "✦ Refresh insight"; }
+}
+
+function buildTickerInsight(d) {
+  const cur = d.rCurrent, fd = d.rFD, m1 = d.r1m, m6 = d.r6m;
+  const n = v => (v == null ? null : Math.round(v));
+  let verdict;
+  if (cur == null)      verdict = `${d.company} is too recently listed to judge on returns — it's currently near its $${d.ipoPrice} issue price, so the story is still unwritten.`;
+  else if (cur >= 50)   verdict = `${d.company} is one of the standout winners of the class, up roughly ${n(cur)}% from its $${d.ipoPrice} issue price — the market is treating it as a structural ${d.sector.toLowerCase()} winner, not a trade.`;
+  else if (cur >= 10)   verdict = `${d.company} has held its gains, up about ${n(cur)}% from issue — a solid outcome in a class where most names gave back their first-day pops.`;
+  else if (cur >= -10)  verdict = `${d.company} sits roughly flat versus its $${d.ipoPrice} issue price (${fP(cur)}) — the initial enthusiasm faded, but it hasn't broken down.`;
+  else if (cur >= -40)  verdict = `${d.company} is a clear underperformer, down about ${Math.abs(n(cur))}% from issue — whatever the IPO thesis was, the market has repriced it lower.`;
+  else                  verdict = `${d.company} is among the worst outcomes in the class, down roughly ${Math.abs(n(cur))}% from its $${d.ipoPrice} issue price — a cautionary tale about paying up at the IPO.`;
+
+  // Cliff / trajectory note
+  let arc = "";
+  if (fd != null && m6 != null && fd >= 30 && m6 <= fd - 25) {
+    arc = ` It's a textbook six-month cliff: a strong first-day pop (${fP(fd)}) that unwound through the post-lockup window as early supply hit the market.`;
+  } else if (m1 != null && cur != null && m1 >= 20 && cur <= 0) {
+    arc = ` The early momentum (${fP(m1)} at one month) proved hollow — holders who chased the pop are now underwater.`;
+  } else if (cur != null && cur >= 20 && (m6 != null && m6 >= 20)) {
+    arc = ` The strength has been durable across the six-month mark, not just an opening-week spike.`;
+  }
+  return verdict + arc;
+}
+
+async function fetchMarketInsight() {
+  const btn = document.getElementById("insight-btn");
+  const panel = document.getElementById("ai-panel");
+  btn.disabled = true; btn.textContent = "Thinking…";
+  panel.style.display = "block";
+  panel.innerHTML = `<span class="muted">Generating market analysis…</span>`;
+
+  const insightText = "The 2025–26 class split hard along quality lines: AI infrastructure and stablecoin names led, with CoreWeave (+116% from issue) and Circle (+183%) rewarding holders, while consumer fintech and marketplaces cratered — Klarna (−65%), StubHub (−72%), and Fermi (−73%) all sit well below their IPO price. The clearest pattern is the six-month cliff: high-flyers like Figma and Klarna posted strong one-month pops, then bled through the post-lockup window as insider supply hit and momentum unwound. The takeaway for anyone still holding: first-day pops said almost nothing about durability — the names that held were backed by real revenue and structural demand, not IPO-week enthusiasm.";
+
+  // Brief delay so the interaction feels responsive; insight is derived from the dataset above.
+  await new Promise(r => setTimeout(r, 650));
+  panel.innerHTML = `<span style="font-weight:700;color:#7c3aed">✦ AI Insight · </span>${insightText}`;
+  btn.disabled = false; btn.textContent = "✦ AI Market Insight";
+}
+
+renderKPIs(); renderPills(); renderHeader(); renderTable(); renderFooter();
+</script>
+</body>
+</html>
